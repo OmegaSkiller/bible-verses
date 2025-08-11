@@ -12,7 +12,7 @@
 
       <form id="generatorForm" class="bg-white rounded-lg shadow p-6 space-y-4">
         <div>
-          <label for="mainText" class="block text-sm font-medium mb-1">Text (will be split into 50-character chunks)</label>
+          <label for="mainText" class="block text-sm font-medium mb-1">Text (will be split into 150-character chunks)</label>
           <textarea id="mainText" class="w-full rounded border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-3 py-2" rows="4" placeholder="Enter your text..."></textarea>
           <p id="charInfo" class="text-xs text-gray-500 mt-1"></p>
         </div>
@@ -47,7 +47,7 @@
 
       function updateCharInfo() {
         const len = (mainTextEl.value || '').length;
-        const chunks = Math.ceil(len / 50) || 0;
+        const chunks = Math.ceil(len / 150) || 0;
         charInfoEl.textContent = len > 0
           ? `${len} characters total → ${chunks} image${chunks === 1 ? '' : 's'}`
           : '';
@@ -67,7 +67,7 @@
           return;
         }
 
-        const chunks = chunkString(rawText, 50);
+        const chunks = chunkString(rawText, 150);
         resultMetaEl.textContent = `Generated ${chunks.length} image${chunks.length === 1 ? '' : 's'}`;
 
         chunks.forEach((chunk, idx) => {
@@ -91,6 +91,15 @@
           img.alt = `Generated image ${idx + 1}`;
           img.className = 'w-full h-full object-cover';
 
+          img.addEventListener('error', () => {
+            imgWrap.className = 'w-full aspect-video bg-red-100 overflow-hidden rounded flex items-center justify-center';
+            imgWrap.innerHTML = '';
+            const err = document.createElement('div');
+            err.className = 'text-sm text-red-700 px-3 text-center';
+            err.textContent = 'Failed to load image. Open the Debug report to investigate.';
+            imgWrap.appendChild(err);
+          });
+
           imgWrap.appendChild(img);
 
           const meta = document.createElement('div');
@@ -107,6 +116,14 @@
           a.textContent = 'Download PNG';
           a.setAttribute('download', `image-${idx + 1}.png`);
           actions.appendChild(a);
+
+          const debugLink = document.createElement('a');
+          debugLink.href = imgUrl + '&debug=1';
+          debugLink.target = '_blank';
+          debugLink.rel = 'noopener noreferrer';
+          debugLink.className = 'ml-3 inline-flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium px-3 py-2 rounded';
+          debugLink.textContent = 'Debug report';
+          actions.appendChild(debugLink);
 
           meta.appendChild(caption);
           meta.appendChild(actions);
